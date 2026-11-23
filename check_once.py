@@ -1,4 +1,5 @@
 """Runs once per GitHub Actions trigger: checks Rutgers, alerts Discord on newly opened sections."""
+import gzip
 import json
 import os
 import urllib.request
@@ -16,7 +17,10 @@ Q = f"year={YEAR}&term={TERM}&campus={CAMPUS}"
 def get_json(url):
     req = urllib.request.Request(url, headers=HEADERS)
     with urllib.request.urlopen(req, timeout=60) as r:
-        return json.loads(r.read().decode("utf-8"))
+        data = r.read()
+    if data[:2] == b"\x1f\x8b":
+        data = gzip.decompress(data)
+    return json.loads(data.decode("utf-8"))
 
 
 def send(text):
